@@ -37,7 +37,13 @@ func InitLogger() error {
 	port := os.Getenv("RABBITMQ_LOGGER_PORT")
 
 	project_endpoint_type = os.Getenv("PROJECT_ENDPOINT_TYPE")
+	if project_endpoint_type == "" {
+		return fmt.Errorf("project_endpoint_type env is needed")
+	}
 	project_code = os.Getenv("PROJECT_CODE")
+	if project_code == "" {
+		return fmt.Errorf("project_code env is needed")
+	}
 
 	connection, err = amqp.DialConfig(fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, user), amqp.Config{
 		Heartbeat: 5 * time.Second,
