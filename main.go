@@ -67,36 +67,38 @@ func InitLogger() error {
 }
 
 func Save(level, task, remark, note string) error {
-	message := map[string]string{
-		"remark":         remark,
-		"level":          level,
-		"endpoint_rules": task,
-		"note":           note,
-		"endpoint_type":  project_endpoint_type,
-		"source":         project_code,
-		"time":           time.Now().Format("2006-01-02T15:04:05.000000000Z07:00"),
-		"uuid":           uuidV4(),
-		"refer_class":    "go function",
-	}
+	if channel != nil {
+		message := map[string]string{
+			"remark":         remark,
+			"level":          level,
+			"endpoint_rules": task,
+			"note":           note,
+			"endpoint_type":  project_endpoint_type,
+			"source":         project_code,
+			"time":           time.Now().Format("2006-01-02T15:04:05.000000000Z07:00"),
+			"uuid":           uuidV4(),
+			"refer_class":    "go function",
+		}
 
-	msg, err := json.Marshal(&message)
-	if err != nil {
-		return fmt.Errorf("failed to marshal message asiasiapac logger, error: %s", err)
-	}
+		msg, err := json.Marshal(&message)
+		if err != nil {
+			return fmt.Errorf("failed to marshal message asiasiapac logger, error: %s", err)
+		}
 
-	err = channel.PublishWithContext(
-		context.Background(),
-		"",
-		queue.Name,
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        msg,
-		},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to publish message asiasiapac logger, error: %s", err)
+		err = channel.PublishWithContext(
+			context.Background(),
+			"",
+			queue.Name,
+			false,
+			false,
+			amqp.Publishing{
+				ContentType: "text/plain",
+				Body:        msg,
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("failed to publish message asiasiapac logger, error: %s", err)
+		}
 	}
 
 	return nil
