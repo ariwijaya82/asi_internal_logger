@@ -1,4 +1,4 @@
-module bitbucket.org/asi-softdev/asi_internal_logger
+module github.com/ariwijaya82/asi_internal_logger
 
 go 1.22.1
 
