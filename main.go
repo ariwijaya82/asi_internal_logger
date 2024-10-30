@@ -46,7 +46,7 @@ func InitLogger() error {
 	}
 
 	connection, err = amqp.DialConfig(fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, user), amqp.Config{
-		Heartbeat: 5 * time.Second,
+		Heartbeat: 10 * time.Second,
 	})
 	if err != nil {
 		return fmt.Errorf("failed to init connection asiasiapac logger, error: %s", err)
@@ -73,36 +73,40 @@ func InitLogger() error {
 }
 
 func Save(level, task, remark, note string) error {
-	message := map[string]string{
-		"remark":         remark,
-		"level":          level,
-		"endpoint_rules": task,
-		"note":           note,
-		"endpoint_type":  project_endpoint_type,
-		"source":         project_code,
-		"time":           time.Now().Format("2006-01-02T15:04:05.000000000Z07:00"),
-		"uuid":           uuidV4(),
-		"refer_class":    "go function",
-	}
+	logger := os.Getenv("APP_LOGGER")
 
-	msg, err := json.Marshal(&message)
-	if err != nil {
-		return fmt.Errorf("failed to marshal message asiasiapac logger, error: %s", err)
-	}
+	if logger == "true" {
+		message := map[string]string{
+			"remark":         remark,
+			"level":          level,
+			"endpoint_rules": task,
+			"note":           note,
+			"endpoint_type":  project_endpoint_type,
+			"source":         project_code,
+			"time":           time.Now().Format("2006-01-02T15:04:05.000000000Z07:00"),
+			"uuid":           uuidV4(),
+			"refer_class":    "go function",
+		}
 
-	err = channel.PublishWithContext(
-		context.Background(),
-		"",
-		queue.Name,
-		false,
-		false,
-		amqp.Publishing{
-			ContentType: "text/plain",
-			Body:        msg,
-		},
-	)
-	if err != nil {
-		return fmt.Errorf("failed to publish message asiasiapac logger, error: %s", err)
+		msg, err := json.Marshal(&message)
+		if err != nil {
+			return fmt.Errorf("failed to marshal message asiasiapac logger, error: %s", err)
+		}
+
+		err = channel.PublishWithContext(
+			context.Background(),
+			"",
+			queue.Name,
+			false,
+			false,
+			amqp.Publishing{
+				ContentType: "text/plain",
+				Body:        msg,
+			},
+		)
+		if err != nil {
+			return fmt.Errorf("failed to publish message asiasiapac logger, error: %s", err)
+		}
 	}
 
 	return nil
