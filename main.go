@@ -26,47 +26,50 @@ var project_endpoint_type string
 var project_code string
 
 func InitLogger() error {
-	err := godotenv.Load()
-	if err != nil {
-		return fmt.Errorf("failed get env for asiasiapac logger, error: %s", err)
-	}
+	logger := os.Getenv("APP_LOGGER")
+	if logger == "true" {
+		err := godotenv.Load()
+		if err != nil {
+			return fmt.Errorf("failed get env for asiasiapac logger, error: %s", err)
+		}
 
-	user := os.Getenv("RABBITMQ_LOGGER_USERNAME")
-	pass := os.Getenv("RABBITMQ_LOGGER_PASSWORD")
-	host := os.Getenv("RABBITMQ_LOGGER_HOST")
-	port := os.Getenv("RABBITMQ_LOGGER_PORT")
+		user := os.Getenv("RABBITMQ_LOGGER_USERNAME")
+		pass := os.Getenv("RABBITMQ_LOGGER_PASSWORD")
+		host := os.Getenv("RABBITMQ_LOGGER_HOST")
+		port := os.Getenv("RABBITMQ_LOGGER_PORT")
 
-	project_endpoint_type = os.Getenv("PROJECT_ENDPOINT_TYPE")
-	if project_endpoint_type == "" {
-		return fmt.Errorf("project_endpoint_type env is needed")
-	}
-	project_code = os.Getenv("PROJECT_CODE")
-	if project_code == "" {
-		return fmt.Errorf("project_code env is needed")
-	}
+		project_endpoint_type = os.Getenv("PROJECT_ENDPOINT_TYPE")
+		if project_endpoint_type == "" {
+			return fmt.Errorf("project_endpoint_type env is needed")
+		}
+		project_code = os.Getenv("PROJECT_CODE")
+		if project_code == "" {
+			return fmt.Errorf("project_code env is needed")
+		}
 
-	connection, err = amqp.DialConfig(fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, user), amqp.Config{
-		Heartbeat: 10 * time.Second,
-	})
-	if err != nil {
-		return fmt.Errorf("failed to init connection asiasiapac logger, error: %s", err)
-	}
+		connection, err = amqp.DialConfig(fmt.Sprintf("amqp://%s:%s@%s:%s/%s", user, pass, host, port, user), amqp.Config{
+			Heartbeat: 10 * time.Second,
+		})
+		if err != nil {
+			return fmt.Errorf("failed to init connection asiasiapac logger, error: %s", err)
+		}
 
-	channel, err = connection.Channel()
-	if err != nil {
-		return fmt.Errorf("failed to init channel asiasiapac logger, error: %s", err)
-	}
+		channel, err = connection.Channel()
+		if err != nil {
+			return fmt.Errorf("failed to init channel asiasiapac logger, error: %s", err)
+		}
 
-	queue, err = channel.QueueDeclare(
-		"logger-sys",
-		true,
-		false,
-		false,
-		false,
-		nil,
-	)
-	if err != nil {
-		return fmt.Errorf("failed to create queue asiasiapac logger, error: %s", err)
+		queue, err = channel.QueueDeclare(
+			"logger-sys",
+			true,
+			false,
+			false,
+			false,
+			nil,
+		)
+		if err != nil {
+			return fmt.Errorf("failed to create queue asiasiapac logger, error: %s", err)
+		}
 	}
 
 	return nil
@@ -74,7 +77,6 @@ func InitLogger() error {
 
 func Save(level, task, remark, note string) error {
 	logger := os.Getenv("APP_LOGGER")
-
 	if logger == "true" {
 		message := map[string]string{
 			"remark":         remark,
